@@ -9,6 +9,25 @@
 - **Отмена задач по ID**.
 - **Расширяемая архитектура** — можно подключить Redis, PostgreSQL, логгирование, метрики.
 
+## Структура проекта
+
+- InMemoryTaskQueue.sln
+  - src/
+    - InMemoryTaskQueue/
+      - Models/
+      - Stores/
+      - Services/
+      - Strategies/
+      - Cancellation/
+      - Extensions/
+      - InMemoryTaskQueue.csproj
+  - tests/
+    - InMemoryTaskQueue.Tests/
+      - InMemoryTaskQueue.Tests.csproj
+  - samples/
+    - InMemoryTaskQueue.Sample/
+      - InMemoryTaskQueue.Sample.csproj
+
 ## Интерфейсы
 
 | Интерфейс                  | Назначение                     |
@@ -29,7 +48,6 @@ dotnet add package InMemoryTaskQueue
 ```
 
 ## Примеры
-
 ### Регистрация обработчика задачи
 ```csharp
 public class SendEmailTask : ITaskHandler
@@ -93,25 +111,10 @@ var taskId = await scheduler.ScheduleTaskAsync(...);
 await scheduler.CancelTaskAsync(taskId);
 ```
 
-
-## Структура проекта
-
-- InMemoryTaskQueue.sln
-  - src/
-    - InMemoryTaskQueue/
-      - Models/
-      - Stores/
-      - Services/
-      - Strategies/
-      - Cancellation/
-      - Extensions/
-      - InMemoryTaskQueue.csproj
-  - tests/
-    - InMemoryTaskQueue.Tests/
-      - InMemoryTaskQueue.Tests.csproj
-  - samples/
-    - InMemoryTaskQueue.Sample/
-      - InMemoryTaskQueue.Sample.csproj
+## Пример с внешними системами
+### Redis [RedisTaskStore](InMemoryTaskQueue.Sample/Tasks/RedisTaskStore.cs)
+### SQL [SQLTaskStore](InMemoryTaskQueue.Sample/Tasks/SQLTaskStore.cs)
+### Kafka [KafkaTaskStore](InMemoryTaskQueue.Sample/Tasks/KafkaTaskStore.cs)
 
 ## Сценарии использования
 
@@ -326,7 +329,3 @@ public async Task HandleUserRegistered(UserRegisteredEvent @event)
     );
 }
 ```
-## Пример с внешними системами
-### Redis [RedisTaskStore](InMemoryTaskQueue.Sample/Tasks/RedisTaskStore.cs)
-### SQL [SQLTaskStore](InMemoryTaskQueue.Sample/Tasks/SQLTaskStore.cs)
-### Kafka [KafkaTaskStore](InMemoryTaskQueue.Sample/Tasks/KafkaTaskStore.cs)
