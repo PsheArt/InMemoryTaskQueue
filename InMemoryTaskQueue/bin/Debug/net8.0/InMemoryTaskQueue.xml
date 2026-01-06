@@ -1,0 +1,377 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>InMemoryTaskQueue</name>
+    </assembly>
+    <members>
+        <member name="T:InMemoryTaskQueue.Cancellation.ITaskCancellationRegistry">
+            <summary>
+            Регистрирует и управляет токенами отмены задач.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Cancellation.ITaskCancellationRegistry.Register(System.String)">
+            <summary>
+            Регистрирует токен отмены для задачи с указанным ID.
+            </summary>
+            <param name="taskId">ID задачи.</param>
+            <returns>Токен отмены.</returns>
+        </member>
+        <member name="M:InMemoryTaskQueue.Cancellation.ITaskCancellationRegistry.Cancel(System.String)">
+            <summary>
+            Отменяет задачу по ID.
+            </summary>
+            <param name="taskId">ID задачи.</param>
+            <returns>True, если задача была найдена и отменена.</returns>
+        </member>
+        <member name="M:InMemoryTaskQueue.Cancellation.ITaskCancellationRegistry.Unregister(System.String)">
+            <summary>
+            Удаляет токен отмены для задачи.
+            </summary>
+            <param name="taskId">ID задачи.</param>
+        </member>
+        <member name="T:InMemoryTaskQueue.Cancellation.TaskCancellationRegistry">
+            <summary>
+            Реализация ITaskCancellationRegistry с использованием словаря.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Cancellation.TaskCancellationRegistry.Register(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:InMemoryTaskQueue.Cancellation.TaskCancellationRegistry.Cancel(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:InMemoryTaskQueue.Cancellation.TaskCancellationRegistry.Unregister(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:InMemoryTaskQueue.Extensions.ServiceCollectionExtensions">
+            <summary>
+            Методы расширения для регистрации компонентов планировщика задач в DI-контейнере.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Extensions.ServiceCollectionExtensions.AddInMemoryTaskQueue(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{InMemoryTaskQueue.Options.InMemoryTaskQueueOptions})">
+            <summary>
+            Добавляет компоненты планировщика задач в сервисы.
+            </summary>
+            <param name="services">Коллекция сервисов.</param>
+            <param name="configureOptions">Конфигурация опций.</param>
+            <returns>Коллекция сервисов.</returns>
+        </member>
+        <member name="T:InMemoryTaskQueue.Factories.DefaultTaskFactory">
+            <summary>
+            Стандартная реализация фабрики задач, использующая DI-контейнер для поиска обработчиков.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Factories.DefaultTaskFactory.#ctor(System.IServiceProvider)">
+            <inheritdoc />
+        </member>
+        <member name="M:InMemoryTaskQueue.Factories.DefaultTaskFactory.CreateTask(InMemoryTaskQueue.Models.TaskDefinition)">
+            <inheritdoc />
+        </member>
+        <member name="T:InMemoryTaskQueue.Factories.ITaskFactory">
+            <summary>
+            Фабрика для восстановления задач из сериализуемого определения.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Factories.ITaskFactory.CreateTask(InMemoryTaskQueue.Models.TaskDefinition)">
+            <summary>
+            Восстанавливает асинхронную задачу по её определению.
+            </summary>
+            <param name="taskDefinition">Сериализуемое определение задачи.</param>
+            <returns>Функция выполнения задачи.</returns>
+        </member>
+        <member name="T:InMemoryTaskQueue.Handlers.ITaskHandler">
+            <summary>
+            Интерфейс обработчика задачи, который может быть зарегистрирован в DI.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Handlers.ITaskHandler.ExecuteAsync(System.Collections.Generic.Dictionary{System.String,System.Object},System.Threading.CancellationToken)">
+            <summary>
+            Выполняет задачу с указанными аргументами.
+            </summary>
+            <param name="args">Аргументы задачи.</param>
+            <param name="cancellationToken">Токен отмены.</param>
+            <returns>Задача выполнения.</returns>
+        </member>
+        <member name="T:InMemoryTaskQueue.Models.QueuedTask">
+            <summary>
+            Модель задачи, находящейся в очереди.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.Id">
+            <summary>
+            Уникальный идентификатор задачи.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.TaskDefinition">
+            <summary>
+            Определение задачи, сериализуемое и восстанавливаемое.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.DueTime">
+            <summary>
+            Время, когда задача должна быть выполнена.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.MaxRetries">
+            <summary>
+            Максимальное количество попыток выполнения задачи.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.CurrentAttempt">
+            <summary>
+            Текущая попытка выполнения задачи.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.Name">
+            <summary>
+            Имя задачи для логгирования или отладки.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.RetryStrategy">
+            <summary>
+            Стратегия повтора выполнения задачи.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.CreatedAt">
+            <summary>
+            Время создания задачи.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.ExecutionTimeout">
+            <summary>
+            Максимальное время выполнения задачи. Если null — без ограничения.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.CancellationSourceId">
+            <summary>
+            Идентификатор источника отмены задачи.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.Metadata">
+            <summary>
+            Дополнительные пользовательские данные.
+            </summary>
+        </member>
+        <member name="T:InMemoryTaskQueue.Models.TaskDefinition">
+            <summary>
+            Сериализуемое определение задачи. 
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.TaskDefinition.TaskType">
+            <summary>
+            Тип задачи, по которому можно восстановить её реализацию.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.TaskDefinition.Args">
+            <summary>
+            Аргументы, необходимые для выполнения задачи.
+            </summary>
+        </member>
+        <member name="T:InMemoryTaskQueue.Options.InMemoryTaskQueueOptions">
+            <summary>
+            Настройки планировщика задач.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Options.InMemoryTaskQueueOptions.MaxConcurrency">
+            <summary>
+            Максимальное количество задач, выполняемых одновременно.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Options.InMemoryTaskQueueOptions.PollingInterval">
+            <summary>
+            Интервал опроса хранилища задач.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Options.InMemoryTaskQueueOptions.EnableLogging">
+            <summary>
+            Включить логгирование.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Options.InMemoryTaskQueueOptions.MaxQueueSize">
+            <summary>
+            Максимальный размер очереди задач.
+            </summary>
+        </member>
+        <member name="T:InMemoryTaskQueue.Options.TaskScheduleOptions">
+            <summary>
+            Опции планирования задачи.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Options.TaskScheduleOptions.Delay">
+            <summary>
+            Задержка перед выполнением задачи.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Options.TaskScheduleOptions.MaxRetries">
+            <summary>
+            Максимальное количество попыток выполнения задачи.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Options.TaskScheduleOptions.RetryStrategy">
+            <summary>
+            Стратегия повтора выполнения задачи.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Options.TaskScheduleOptions.Name">
+            <summary>
+            Имя задачи для логгирования или отладки.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Options.TaskScheduleOptions.ExecutionTimeout">
+            <summary>
+            Максимальное время выполнения задачи. Если null — без ограничения.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Options.TaskScheduleOptions.Metadata">
+            <summary>
+            Дополнительные пользовательские данные.
+            </summary>
+        </member>
+        <member name="T:InMemoryTaskQueue.Processors.TaskProcessor">
+            <summary>
+            Фоновая служба, опрашивающая очередь задач и выполняющая их.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Processors.TaskProcessor.#ctor(InMemoryTaskQueue.Stores.ITaskStore,InMemoryTaskQueue.Services.ITaskExecutor,Microsoft.Extensions.Logging.ILogger{InMemoryTaskQueue.Processors.TaskProcessor},Microsoft.Extensions.Options.IOptions{InMemoryTaskQueue.Options.InMemoryTaskQueueOptions})">
+            <inheritdoc />
+        </member>
+        <member name="M:InMemoryTaskQueue.Processors.TaskProcessor.ExecuteAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:InMemoryTaskQueue.Services.DefaultTaskExecutor">
+            <summary>
+            Стандартная реализация ITaskExecutor, использующая фабрику задач.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Services.DefaultTaskExecutor.#ctor(InMemoryTaskQueue.Factories.ITaskFactory,InMemoryTaskQueue.Cancellation.ITaskCancellationRegistry,Microsoft.Extensions.Logging.ILogger{InMemoryTaskQueue.Services.DefaultTaskExecutor},System.Diagnostics.Metrics.IMeterFactory)">
+            <inheritdoc />
+        </member>
+        <member name="M:InMemoryTaskQueue.Services.DefaultTaskExecutor.ExecuteAsync(InMemoryTaskQueue.Models.QueuedTask,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:InMemoryTaskQueue.Services.ITaskExecutor">
+            <summary>
+            Отвечает за выполнение задачи и обработку ошибок.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Services.ITaskExecutor.ExecuteAsync(InMemoryTaskQueue.Models.QueuedTask,System.Threading.CancellationToken)">
+            <summary>
+            Выполняет задачу.
+            </summary>
+            <param name="task">Задача для выполнения.</param>
+            <param name="cancellationToken">Токен отмены.</param>
+            <returns>Задача выполнения.</returns>
+        </member>
+        <member name="T:InMemoryTaskQueue.Services.ITaskScheduler">
+            <summary>
+            Предоставляет методы для планирования асинхронных задач.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Services.ITaskScheduler.ScheduleTaskAsync(InMemoryTaskQueue.Models.TaskDefinition,InMemoryTaskQueue.Options.TaskScheduleOptions,System.Threading.CancellationToken)">
+            <summary>
+            Планирует выполнение задачи через ITaskHandler.
+            </summary>
+            <param name="taskDefinition">Определение задачи.</param>
+            <param name="options">Опции выполнения.</param>
+            <param name="cancellationToken">Токен отмены.</param>
+            <returns>ID задачи для отслеживания.</returns>
+        </member>
+        <member name="M:InMemoryTaskQueue.Services.ITaskScheduler.CancelTaskAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Отменяет задачу по ID.
+            </summary>
+            <param name="taskId">ID задачи.</param>
+            <param name="cancellationToken">Токен отмены.</param>
+            <returns>True, если задача была найдена и отменена.</returns>
+        </member>
+        <member name="T:InMemoryTaskQueue.Services.TaskScheduler">
+            <summary>
+            Реализация планировщика задач.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Services.TaskScheduler.#ctor(InMemoryTaskQueue.Stores.ITaskStore,InMemoryTaskQueue.Cancellation.ITaskCancellationRegistry,Microsoft.Extensions.Logging.ILogger{InMemoryTaskQueue.Services.TaskScheduler})">
+            <inheritdoc />
+        </member>
+        <member name="M:InMemoryTaskQueue.Services.TaskScheduler.ScheduleTaskAsync(InMemoryTaskQueue.Models.TaskDefinition,InMemoryTaskQueue.Options.TaskScheduleOptions,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:InMemoryTaskQueue.Services.TaskScheduler.CancelTaskAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:InMemoryTaskQueue.Stores.InMemoryTaskStore">
+            <summary>
+            In-memory реализация ITaskStore.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.EnqueueAsync(InMemoryTaskQueue.Models.QueuedTask,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.DequeueDueTaskAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.MarkAsCompletedAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.MarkAsFailedAsync(System.String,System.Exception,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:InMemoryTaskQueue.Stores.ITaskStore">
+            <summary>
+            Хранит задачи в очереди.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.ITaskStore.EnqueueAsync(InMemoryTaskQueue.Models.QueuedTask,System.Threading.CancellationToken)">
+            <summary>
+            Добавляет задачу в очередь.
+            </summary>
+            <param name="task">Задача для добавления.</param>
+            <param name="ct">Токен отмены.</param>
+            <returns>Задача завершения.</returns>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.ITaskStore.DequeueDueTaskAsync(System.Threading.CancellationToken)">
+            <summary>
+            Возвращает следующую задачу, срок которой истёк.
+            </summary>
+            <param name="ct">Токен отмены.</param>
+            <returns>Задача или null, если нет доступных.</returns>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.ITaskStore.MarkAsCompletedAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Помечает задачу как завершённую.
+            </summary>
+            <param name="taskId">ID задачи.</param>
+            <param name="ct">Токен отмены.</param>
+            <returns>Задача завершения.</returns>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.ITaskStore.MarkAsFailedAsync(System.String,System.Exception,System.Threading.CancellationToken)">
+            <summary>
+            Помечает задачу как проваленную.
+            </summary>
+            <param name="taskId">ID задачи.</param>
+            <param name="exception">Исключение, вызвавшее сбой.</param>
+            <param name="ct">Токен отмены.</param>
+            <returns>Задача завершения.</returns>
+        </member>
+        <member name="T:InMemoryTaskQueue.Strategies.ExponentialBackoffRetryStrategy">
+            <summary>
+            Стратегия повтора с экспоненциальным увеличением задержки.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Strategies.ExponentialBackoffRetryStrategy.GetNextDelay(System.Int32,System.Exception)">
+            <inheritdoc />
+        </member>
+        <member name="T:InMemoryTaskQueue.Strategies.IRetryStrategy">
+            <summary>
+            Определяет, как и когда повторять задачу при ошибке.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Strategies.IRetryStrategy.GetNextDelay(System.Int32,System.Exception)">
+            <summary>
+            Возвращает задержку до следующей попытки или null, если повторять не нужно.
+            </summary>
+            <param name="currentAttempt">Номер текущей попытки.</param>
+            <param name="lastException">Последнее исключение, вызвавшее сбой.</param>
+            <returns>Время задержки перед следующей попыткой или null.</returns>
+        </member>
+    </members>
+</doc>

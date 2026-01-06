@@ -1,0 +1,7 @@
+/.vs
+*.dll
+/InMemoryTaskQueue.Sample/bin
+/InMemoryTaskQueue.Sample/obj
+/InMemoryTaskQueue.Tests/obj
+/InMemoryTaskQueue/obj
+/InMemoryTaskQueue.Tests/bin
