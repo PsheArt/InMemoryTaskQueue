@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	  <PackageId>InMemoryTaskQueue</PackageId>
-	  <PackageVersion>1.0.0</PackageVersion>
+	  <PackageVersion>1.0.1</PackageVersion>
 	  <Authors>PsheArt</Authors>
 	  <Description>Production-ready, DI-friendly, тестируемая, расширяемая библиотека для планирования асинхронных задач в .NET.</Description>
 	  <Copyright>Copyright (c) PsheArt 2026</Copyright>
