@@ -152,6 +152,21 @@
             Дополнительные пользовательские данные.
             </summary>
         </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.PartitionKey">
+            <summary>
+            Ключ партиции. Задачи с одинаковым ключом будут выполняться последовательно.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.DependsOnTaskId">
+            <summary>
+            Идентификатор задачи, от которой зависит текущая. Выполнится только после её завершения.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Models.QueuedTask.OrderIndex">
+            <summary>
+            Индекс порядка выполнения внутри партиции. Чем меньше — тем раньше.
+            </summary>
+        </member>
         <member name="T:InMemoryTaskQueue.Models.TaskDefinition">
             <summary>
             Сериализуемое определение задачи. 
@@ -227,6 +242,21 @@
             Дополнительные пользовательские данные.
             </summary>
         </member>
+        <member name="P:InMemoryTaskQueue.Options.TaskScheduleOptions.PartitionKey">
+            <summary>
+            Ключ партиции. Задачи с одинаковым ключом будут выполняться последовательно.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Options.TaskScheduleOptions.DependsOnTaskId">
+            <summary>
+            Идентификатор задачи, от которой зависит текущая. Выполнится только после её завершения.
+            </summary>
+        </member>
+        <member name="P:InMemoryTaskQueue.Options.TaskScheduleOptions.OrderIndex">
+            <summary>
+            Индекс порядка выполнения внутри партиции. Чем меньше — тем раньше.
+            </summary>
+        </member>
         <member name="T:InMemoryTaskQueue.Processors.TaskProcessor">
             <summary>
             Фоновая служба, опрашивающая очередь задач и выполняющая их.
@@ -236,7 +266,56 @@
             <inheritdoc />
         </member>
         <member name="M:InMemoryTaskQueue.Processors.TaskProcessor.ExecuteAsync(System.Threading.CancellationToken)">
-            <inheritdoc />
+            <summary>
+            Основной метод выполнения фоновой задачи - опрашивает очередь и обрабатывает задачи
+            </summary>
+            <param name="stoppingToken">Токен отмены для остановки сервиса</param>
+        </member>
+        <member name="M:InMemoryTaskQueue.Processors.TaskProcessor.ProcessTaskAsync(InMemoryTaskQueue.Models.QueuedTask,System.Threading.CancellationToken)">
+            <summary>
+            Асинхронно обрабатывает отдельную задачу с учетом ограничений по параллелизму и партиционированию
+            </summary>
+            <param name="task">Задача для обработки</param>
+            <param name="cancellationToken">Токен отмены</param>
+        </member>
+        <member name="M:InMemoryTaskQueue.Processors.TaskProcessor.RemoveCompletedTasks">
+            <summary>
+            Удаляет завершенные задачи из списка активных
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Processors.TaskProcessor.StopAsync(System.Threading.CancellationToken)">
+            <summary>
+            Останавливает сервис с корректным завершением активных задач
+            </summary>
+            <param name="cancellationToken">Токен отмены</param>
+        </member>
+        <member name="M:InMemoryTaskQueue.Processors.TaskProcessor.Dispose(System.Boolean)">
+            <summary>
+            Освобождает ресурсы
+            </summary>
+            <param name="disposing">true, если вызывается из Dispose(), false - из финализатора</param>
+        </member>
+        <member name="M:InMemoryTaskQueue.Processors.TaskProcessor.Dispose">
+            <summary>
+            Публичный метод Dispose для интерфейса IDisposable
+            </summary>
+        </member>
+        <member name="T:InMemoryTaskQueue.Processors.KeyedSemaphore">
+            <summary>
+            Класс для управления семафорами по ключу (для партиционирования).
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Processors.KeyedSemaphore.GetSemaphore(System.String)">
+            <summary>
+            Возвращает или создает семафор для заданного ключа
+            </summary>
+            <param name="key">Ключ для партиционирования</param>
+            <returns>Семафор, соответствующий ключу</returns>
+        </member>
+        <member name="M:InMemoryTaskQueue.Processors.KeyedSemaphore.Dispose">
+            <summary>
+            Освобождает все семафоры
+            </summary>
         </member>
         <member name="T:InMemoryTaskQueue.Services.DefaultTaskExecutor">
             <summary>
@@ -288,8 +367,12 @@
             <summary>
             Реализация планировщика задач.
             </summary>
+            <inheritdoc />
         </member>
         <member name="M:InMemoryTaskQueue.Services.TaskScheduler.#ctor(InMemoryTaskQueue.Stores.ITaskStore,InMemoryTaskQueue.Cancellation.ITaskCancellationRegistry,Microsoft.Extensions.Logging.ILogger{InMemoryTaskQueue.Services.TaskScheduler})">
+            <summary>
+            Реализация планировщика задач.
+            </summary>
             <inheritdoc />
         </member>
         <member name="M:InMemoryTaskQueue.Services.TaskScheduler.ScheduleTaskAsync(InMemoryTaskQueue.Models.TaskDefinition,InMemoryTaskQueue.Options.TaskScheduleOptions,System.Threading.CancellationToken)">
@@ -304,16 +387,63 @@
             </summary>
         </member>
         <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.EnqueueAsync(InMemoryTaskQueue.Models.QueuedTask,System.Threading.CancellationToken)">
-            <inheritdoc />
+            <summary>
+            Кладёт задачу в очередь.
+            </summary>
         </member>
         <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.DequeueDueTaskAsync(System.Threading.CancellationToken)">
-            <inheritdoc />
+            <summary>
+            Извлекает задачу, срок которой истёк, и готова к выполнению.
+            Проверяет зависимости и порядок задач в партиции.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.GetTasksByPartitionAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Возвращает все задачи для заданной партиции.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.GetTaskByIdAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Возвращает задачу по её идентификатору.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.IsDependencyCompletedAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Проверяет, завершена ли задача, от которой зависит текущая.
+            </summary>
         </member>
         <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.MarkAsCompletedAsync(System.String,System.Threading.CancellationToken)">
-            <inheritdoc />
+            <summary>
+            Помечает задачу как завершённую.
+            </summary>
         </member>
         <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.MarkAsFailedAsync(System.String,System.Exception,System.Threading.CancellationToken)">
+            <summary>
+            Помечает задачу как неудачно выполненную.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.DeleteTaskAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Удаляет задачу из очереди.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.IsDependencyCompleted(System.String)">
+            <summary>
+            Внутренний метод для проверки завершения зависимости.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.RequeueAsync(InMemoryTaskQueue.Models.QueuedTask,System.Threading.CancellationToken)">
             <inheritdoc />
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.InMemoryTaskStore.HasEarlierTaskAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Проверяет наличие задач с меньшим OrderIndex в той же партиции
+            </summary>
+            <param name="partitionKey">Ключ партиции</param>
+            <param name="orderIndex">Текущий индекс порядка</param>
+            <param name="currentTaskId">Идентификатор текущей задачи (для исключения из проверки)</param>
+            <param name="cancellationToken">Токен отмены</param>
+            <returns>True, если есть задачи с меньшим OrderIndex</returns>
         </member>
         <member name="T:InMemoryTaskQueue.Stores.ITaskStore">
             <summary>
@@ -327,6 +457,11 @@
             <param name="task">Задача для добавления.</param>
             <param name="ct">Токен отмены.</param>
             <returns>Задача завершения.</returns>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.ITaskStore.RequeueAsync(InMemoryTaskQueue.Models.QueuedTask,System.Threading.CancellationToken)">
+            <summary>
+            Возвращает задачу обратно в очередь (например, если зависимость не выполнена).
+            </summary>
         </member>
         <member name="M:InMemoryTaskQueue.Stores.ITaskStore.DequeueDueTaskAsync(System.Threading.CancellationToken)">
             <summary>
@@ -351,6 +486,31 @@
             <param name="exception">Исключение, вызвавшее сбой.</param>
             <param name="ct">Токен отмены.</param>
             <returns>Задача завершения.</returns>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.ITaskStore.IsDependencyCompletedAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Проверяет, завершена ли задача, от которой зависит текущая.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.ITaskStore.GetTaskByIdAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Возвращает задачу по её идентификатору.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.ITaskStore.DeleteTaskAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Удаляет задачу из очереди.
+            </summary>
+        </member>
+        <member name="M:InMemoryTaskQueue.Stores.ITaskStore.HasEarlierTaskAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Проверяет наличие задач с меньшим OrderIndex в той же партиции
+            </summary>
+            <param name="partitionKey">Ключ партиции</param>
+            <param name="orderIndex">Текущий индекс порядка</param>
+            <param name="currentTaskId">Идентификатор текущей задачи (для исключения из проверки)</param>
+            <param name="cancellationToken">Токен отмены</param>
+            <returns>True, если есть задачи с меньшим OrderIndex</returns>
         </member>
         <member name="T:InMemoryTaskQueue.Strategies.ExponentialBackoffRetryStrategy">
             <summary>

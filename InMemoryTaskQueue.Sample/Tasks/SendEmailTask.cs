@@ -18,4 +18,21 @@ namespace InMemoryTaskQueue.Sample.Tasks
             return Task.CompletedTask;
         }
     }
+
+    public class UserNotificationTask : ITaskHandler
+    {
+        public async Task ExecuteAsync(Dictionary<string, object> args, CancellationToken cancellationToken)
+        {
+            var userId = args["UserId"] as string ?? "unknown";
+            var notificationId = args["NotificationId"] as string ?? "unknown";
+            var message = args["Message"] as string ?? "No message";
+
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] Отправка уведомления {notificationId} пользователю {userId}: {message}");
+
+            // Симуляция отправки уведомления
+            await Task.Delay(500, cancellationToken);
+
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] Уведомление {notificationId} отправлено пользователю {userId}");
+        }
+    }
 }

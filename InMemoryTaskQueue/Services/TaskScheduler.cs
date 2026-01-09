@@ -15,22 +15,15 @@ namespace InMemoryTaskQueue.Services
     /// <summary>
     /// Реализация планировщика задач.
     /// </summary>
-    public class TaskScheduler : ITaskScheduler
+    /// <inheritdoc />
+    public class TaskScheduler(
+        ITaskStore taskStore,
+        ITaskCancellationRegistry cancellationRegistry,
+        ILogger<TaskScheduler>? logger = null) : ITaskScheduler
     {
-        private readonly ITaskStore _taskStore;
-        private readonly ITaskCancellationRegistry _cancellationRegistry;
-        private readonly ILogger<TaskScheduler>? _logger;
-
-        /// <inheritdoc />
-        public TaskScheduler(
-            ITaskStore taskStore,
-            ITaskCancellationRegistry cancellationRegistry,
-            ILogger<TaskScheduler>? logger = null)
-        {
-            _taskStore = taskStore;
-            _cancellationRegistry = cancellationRegistry;
-            _logger = logger;
-        }
+        private readonly ITaskStore _taskStore = taskStore;
+        private readonly ITaskCancellationRegistry _cancellationRegistry = cancellationRegistry;
+        private readonly ILogger<TaskScheduler>? _logger = logger;
 
         /// <inheritdoc />
         public async Task<string> ScheduleTaskAsync(
@@ -49,12 +42,15 @@ namespace InMemoryTaskQueue.Services
                 RetryStrategy = options.RetryStrategy ?? new ExponentialBackoffRetryStrategy(),
                 ExecutionTimeout = options.ExecutionTimeout,
                 Metadata = options.Metadata,
-                CancellationSourceId = Guid.NewGuid().ToString()
+                CancellationSourceId = Guid.NewGuid().ToString(),                        
+                PartitionKey = options.PartitionKey,
+                DependsOnTaskId = options.DependsOnTaskId, 
+                OrderIndex = options.OrderIndex 
             };
 
             await _taskStore.EnqueueAsync(queuedTask, cancellationToken);
 
-            _logger?.LogInformation("Задача {TaskId} запланирован с помощью TaskDefinition", queuedTask.Id);
+            _logger?.LogInformation("Задача {TaskId} запланирован", queuedTask.Id);
 
             return queuedTask.Id;
         }

@@ -66,5 +66,20 @@ namespace InMemoryTaskQueue.Models
         /// Дополнительные пользовательские данные.
         /// </summary>
         public Dictionary<string, object>? Metadata { get; init; }
+
+        /// <summary>
+        /// Ключ партиции. Задачи с одинаковым ключом будут выполняться последовательно.
+        /// </summary>
+        public string? PartitionKey { get; set; }
+
+        /// <summary>
+        /// Идентификатор задачи, от которой зависит текущая. Выполнится только после её завершения.
+        /// </summary>
+        public string? DependsOnTaskId { get; set; }
+
+        /// <summary>
+        /// Индекс порядка выполнения внутри партиции. Чем меньше — тем раньше.
+        /// </summary>
+        public int OrderIndex { get; set; } = 0;
     }
 }

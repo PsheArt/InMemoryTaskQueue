@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics.Tracing;
+using InMemoryTaskQueue.Stores;
 
 namespace InMemoryTaskQueue.Services
 {
@@ -34,7 +35,6 @@ namespace InMemoryTaskQueue.Services
             _taskFactory = taskFactory;
             _cancellationRegistry = cancellationRegistry;
             _logger = logger;
-
             if (meterFactory != null)
             {
                 _meter = meterFactory.Create("InMemoryTaskQueue"); 
@@ -49,6 +49,7 @@ namespace InMemoryTaskQueue.Services
         /// <inheritdoc />
         public async Task ExecuteAsync(QueuedTask task, CancellationToken cancellationToken)
         {
+
             Func<CancellationToken, Task>? func = null;
 
             try
@@ -58,17 +59,16 @@ namespace InMemoryTaskQueue.Services
 
                 if (func == null)
                 {
-                    _logger?.LogError("Task factory returned null for task {TaskId}.", task.Id);
-                    throw new InvalidOperationException($"Task factory returned null for task {task.Id}.");
+                    _logger?.LogError("Фабрика вернула null для задачи  {TaskId}.", task.Id);
+                    throw new InvalidOperationException($"Фабрика вернула null для задачи {task.Id}.");
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Failed to create task function for task {TaskId}.", task.Id);
+                _logger?.LogError(ex, "Не удалось создать задачу {TaskId}.", task.Id);
                 throw;
             }
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            System.Diagnostics.Debug.WriteLine(cts);
             if (task.CancellationSourceId != null)
             {
                 var taskCts = _cancellationRegistry.Register(task.CancellationSourceId);
@@ -87,7 +87,7 @@ namespace InMemoryTaskQueue.Services
                 }
 
                 _completedCounter?.Add(1, new KeyValuePair<string, object?>("task_id", task.Id));
-                _logger?.LogInformation("Task {TaskId} completed successfully.", task.Id);
+                _logger?.LogInformation("Задача {TaskId} завершилась успешно.", task.Id);
             }
             catch (OperationCanceledException)
             {

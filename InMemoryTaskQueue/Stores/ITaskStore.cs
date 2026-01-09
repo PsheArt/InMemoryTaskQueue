@@ -21,6 +21,10 @@ namespace InMemoryTaskQueue.Stores
         Task EnqueueAsync(QueuedTask task, CancellationToken ct = default);
 
         /// <summary>
+        /// Возвращает задачу обратно в очередь (например, если зависимость не выполнена).
+        /// </summary>
+        Task RequeueAsync(QueuedTask task, CancellationToken ct = default);
+        /// <summary>
         /// Возвращает следующую задачу, срок которой истёк.
         /// </summary>
         /// <param name="ct">Токен отмены.</param>
@@ -43,5 +47,28 @@ namespace InMemoryTaskQueue.Stores
         /// <param name="ct">Токен отмены.</param>
         /// <returns>Задача завершения.</returns>
         Task MarkAsFailedAsync(string taskId, Exception exception, CancellationToken ct = default);
+
+        /// <summary>
+        /// Проверяет, завершена ли задача, от которой зависит текущая.
+        /// </summary>
+        Task<bool> IsDependencyCompletedAsync(string dependsOnTaskId, CancellationToken ct = default);
+       
+        /// <summary>
+        /// Возвращает задачу по её идентификатору.
+        /// </summary>
+        Task<QueuedTask?> GetTaskByIdAsync(string taskId, CancellationToken ct = default);
+        /// <summary>
+        /// Удаляет задачу из очереди.
+        /// </summary>
+        Task DeleteTaskAsync(string taskId, CancellationToken ct = default);
+        /// <summary>
+        /// Проверяет наличие задач с меньшим OrderIndex в той же партиции
+        /// </summary>
+        /// <param name="partitionKey">Ключ партиции</param>
+        /// <param name="orderIndex">Текущий индекс порядка</param>
+        /// <param name="currentTaskId">Идентификатор текущей задачи (для исключения из проверки)</param>
+        /// <param name="cancellationToken">Токен отмены</param>
+        /// <returns>True, если есть задачи с меньшим OrderIndex</returns>
+        Task<bool> HasEarlierTaskAsync(string partitionKey, int orderIndex, string currentTaskId, CancellationToken cancellationToken);
     }
 }

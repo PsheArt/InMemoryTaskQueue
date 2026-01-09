@@ -25,27 +25,58 @@ namespace InMemoryTaskQueue.Factories
         /// <inheritdoc />
         public Func<CancellationToken, Task> CreateTask(TaskDefinition taskDefinition)
         {
-            var handlerType = Type.GetType(taskDefinition.TaskType);
+            var handlerType = ResolveType(taskDefinition.TaskType);
 
             if (handlerType == null)
             {
-                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                throw new InvalidOperationException($"Тип задачи '{taskDefinition.TaskType}' не найден.");
+            }
 
-                foreach (var assembly in assemblies)
+            if (!typeof(ITaskHandler).IsAssignableFrom(handlerType))
+            {
+                throw new InvalidOperationException($"Тип '{taskDefinition.TaskType}' не реализует интерфейс ITaskHandler.");
+            }
+
+            var handler = _serviceProvider.GetService(handlerType) as ITaskHandler;
+            if (handler == null)
+            {
+                try
                 {
-                    handlerType = assembly.GetType(taskDefinition.TaskType);
-                    if (handlerType != null) break;
+                    handler = (ITaskHandler)ActivatorUtilities.CreateInstance(_serviceProvider, handlerType);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Не удалось создать экземпляр обработчика задачи '{taskDefinition.TaskType}'.", ex);
                 }
             }
 
-            if (handlerType == null || !typeof(ITaskHandler).IsAssignableFrom(handlerType))
+            return ct => handler.ExecuteAsync(taskDefinition.Args, ct);
+        }
+        private Type? ResolveType(string typeName)
+        {
+            var handlerType = Type.GetType(typeName);
+
+            if (handlerType != null)
             {
-                throw new InvalidOperationException($"Task handler type '{taskDefinition.TaskType}' not found or does not implement ITaskHandler.");
+                return handlerType;
             }
 
-            var handler = (ITaskHandler)_serviceProvider.GetRequiredService(handlerType);
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (var assembly in assemblies)
+            {
+                try
+                {
+                    handlerType = assembly.GetType(typeName);
+                    if (handlerType != null)
+                        return handlerType;
+                }
+                catch
+                {
+                    continue;
+                }
+            }
 
-            return ct => handler.ExecuteAsync(taskDefinition.Args, ct);
+            return null;
         }
     }
 }
